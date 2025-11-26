@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Travel Audit Assistant — Tech Blue+</title>
+  <meta name="description" content="Static Travel Audit Assistant for GitHub Pages (Tech Blue+).">
+  <meta property="og:title" content="Travel Audit Assistant — Tech Blue+">
+  <meta property="og:description" content="Upload CSVs, apply rules, get findings and export a PDF — all in your browser.">
+  <link rel="icon" href="assets/logo.svg">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+</head>
+<body>
+  <header class="topbar glassy">
+    <div class="brand">
+      <img src="assets/logo.svg" alt="Logo" class="logo"/>
+      <div class="brand-text">
+        <strong>Travel Audit Assistant</strong>
+        <span>Tech Blue+</span>
+      </div>
+    </div>
+    <nav class="nav">
+      <button class="tab-btn" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="ingest">Ingestion</button>
+      <button class="tab-btn" data-tab="findings">Findings</button>
+      <button class="tab-btn" data-tab="rules">Rules</button>
+      <button class="tab-btn" data-tab="reports">Reports</button>
+      <div class="divider"></div>
+      <label class="theme-toggle">
+        <input id="theme-switch" type="checkbox">
+        <span class="toggle-track"><span class="knob"></span></span>
+        <span class="toggle-label">Dark+</span>
+      </label>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section id="tab-dashboard" class="tab active">
+      <div class="tab-header">
+        <h1>Dashboard</h1>
+        <button class="help-btn" data-help="dashboard" title="Help">?</button>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-label">Total Spend</div><div id="kpi-total" class="kpi-value">—</div></div>
+        <div class="kpi"><div class="kpi-label">% Compliance</div><div id="kpi-compliance" class="kpi-value">—</div></div>
+        <div class="kpi"><div class="kpi-label"># Findings</div><div id="kpi-findings" class="kpi-value">—</div></div>
+        <div class="kpi"><div class="kpi-label">Risk Score</div><div id="kpi-risk" class="kpi-value">—</div></div>
+      </div>
+      <div class="card hint">
+        <p>Upload your CSVs under <strong>Ingestion</strong>. Everything runs locally — no data is uploaded to servers.</p>
+      </div>
+    </section>
+
+    <section id="tab-ingest" class="tab">
+      <div class="tab-header">
+        <h1>Data Ingestion</h1>
+        <button class="help-btn" data-help="ingest" title="Help">?</button>
+      </div>
+      <div class="card">
+        <h3>Expenses (CSV)</h3>
+        <p class="muted">Suggested columns: <code>id,trip_id,category,amount,currency,date,vendor,invoice_id,justification_url,approved,nights,flight_class</code></p>
+        <input id="file-expenses" type="file" accept=".csv">
+        <div class="row">
+          <button id="btn-sample-expenses">Download expenses.csv (sample)</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Trips (CSV) — optional</h3>
+        <p class="muted">Suggested columns: <code>id,employee,destination,start_date,end_date,flight_class,booked_fare</code></p>
+        <input id="file-trips" type="file" accept=".csv">
+        <div class="row">
+          <button id="btn-sample-trips">Download trips.csv (sample)</button>
+        </div>
+      </div>
+      <div class="row">
+        <button id="btn-save">Save in this browser</button>
+        <button id="btn-clear" class="danger">Clear local data</button>
+      </div>
+      <div id="ingest-result" class="muted"></div>
+    </section>
+
+    <section id="tab-findings" class="tab">
+      <div class="tab-header">
+        <h1>Findings</h1>
+        <button class="help-btn" data-help="findings" title="Help">?</button>
+      </div>
+      <table id="tbl-findings">
+        <thead>
+          <tr><th>ID</th><th>Severity</th><th>Detail</th><th>Rule</th><th>Entity</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section id="tab-rules" class="tab">
+      <div class="tab-header">
+        <h1>Rules</h1>
+        <button class="help-btn" data-help="rules" title="Help">?</button>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <h3>Configuration (JSON)</h3>
+          <textarea id="rules-json" rows="16" spellcheck="false"></textarea>
+          <div class="row">
+            <button id="btn-apply-rules">Apply rules</button>
+            <button id="btn-reset-rules" class="secondary">Reset</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Help</h3>
+          <ul>
+            <li><strong>HOTEL_CAP:</strong> USD per night cap for <code>hotel</code> category; uses <code>nights</code>.</li>
+            <li><strong>FLIGHT_CLASS:</strong> allowed economy classes; if <code>approved=true</code>, exception applies.</li>
+            <li><strong>DUPLICATE_INVOICE:</strong> detects duplicate <code>invoice_id</code>.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-reports" class="tab">
+      <div class="tab-header">
+        <h1>Reports</h1>
+        <button class="help-btn" data-help="reports" title="Help">?</button>
+      </div>
+      <div class="row">
+        <input id="report-title" placeholder="Report title" value="Travel Audit — Tech Blue+">
+        <button id="btn-pdf">Generate PDF</button>
+      </div>
+      <p class="muted">The PDF is generated in-browser (jsPDF) with KPIs and findings.</p>
+    </section>
+  </main>
+
+  <footer class="footer">© 2025 Cuervo‑Inc · Travel Audit Assistant — Tech Blue+ · GitHub Pages</footer>
+  <div class="signature-badge">Cuervo‑Inc ✦ Tech Blue</div>
+
+  <!-- Help Modal (starts hidden by CSS; toggled via .active) -->
+  <div id="help-overlay" class="help-overlay">
+    <div class="help-modal">
+      <div class="help-header">
+        <h3 id="help-title">Help</h3>
+        <button id="help-close" class="help-close" title="Close">×</button>
+      </div>
+      <div id="help-content" class="help-content"></div>
+      <div class="help-footer">
+        <button id="help-ok" class="help-ok">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
