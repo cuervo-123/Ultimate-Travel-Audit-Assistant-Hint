@@ -300,3 +300,4 @@ function recalcAll(){
 }
 loadLocal();
 recalcAll();
+recalcAll();
